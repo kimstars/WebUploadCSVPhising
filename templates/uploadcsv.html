@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload CSV</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js"></script>
+</head>
+<body>
+    <h1>Upload CSV</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="csvfile">
+        <input type="submit" value="Upload">
+    </form>
+    <table id="resultTable">
+        <tr>
+            <th>Item</th>
+            <th>Result</th>
+        </tr>
+    </table>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        $(document).ready(function() {
+            // Khi submit form
+            $('#uploadForm').submit(function(event) {
+                event.preventDefault();
+
+                // Lấy dữ liệu từ form
+                var formData = new FormData(this);
+
+                // Gửi dữ liệu lên server
+                $.ajax({
+                    url: '/upload',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                        // Khởi tạo kết nối WebSocket
+                        socket.emit('testGBoosting', data.item);
+                    }
+                });
+            });
+
+            // Lắng nghe sự kiện 'result' từ server
+            socket.on('result', function(result) {
+                // Thêm kết quả vào bảng
+                var newRow = $('<tr><td>' + result + '</td></tr>');
+                $('#resultTable').append(newRow);
+            });
+        });
+    </script>
+</body>
+</html>
